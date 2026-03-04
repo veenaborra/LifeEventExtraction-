@@ -25,7 +25,7 @@ def detect_triggers(sentence):
                     detected.append((event_type, trigger))
 
    # single-word triggers using lemma
-    import spacy
+   
 from triggers import EVENT_TRIGGERS
 
 nlp = spacy.load("en_core_web_md")

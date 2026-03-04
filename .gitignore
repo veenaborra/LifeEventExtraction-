@@ -5,3 +5,6 @@ __pycache__/
 *.pyd
 .env
 .DS_Store
+
+backend/core/pipeline.py
+backend/core/test_pipeline.py
