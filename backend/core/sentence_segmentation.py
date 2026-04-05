@@ -1,25 +1,28 @@
 import spacy
+import re
 
 nlp = spacy.load("en_core_web_md")
 
 
 def segment_sentences(text):
-    """
-    Splits input text into sentences using spaCy.
-    Returns a list of sentence strings.
-    """
-    doc = nlp(text)
 
+    paragraphs = re.split(r'\n\s*\n', text)
     sentences = []
 
-    for sent in doc.sents:
-        cleaned_sentence = sent.text.strip()
-        if cleaned_sentence:
-            sentences.append(cleaned_sentence)
+    for para in paragraphs:
+        para = para.strip()
+        if not para:
+            continue
+
+        doc = nlp(para)
+
+        for sent in doc.sents:
+            cleaned = sent.text.strip()
+
+            if cleaned and len(cleaned.split()) >= 3:
+                sentences.append(cleaned)
 
     return sentences
-
-
 
 if __name__ == "__main__":
     test_text = """

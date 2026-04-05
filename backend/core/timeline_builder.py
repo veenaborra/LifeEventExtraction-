@@ -1,39 +1,43 @@
 def build_timeline(events):
-    """
-    Build a chronological timeline from extracted events.
-    """
 
+    merged = {}
+
+    for e in events:
+
+        year = e.get("year")
+        span = e.get("span")
+
+        # skip invalid events
+        if not year or not span:
+            continue
+
+        key = (year, span)
+
+        #  create new entry if not exists
+        if key not in merged:
+            merged[key] = {
+                "year": year,
+                "span": span,
+                "event_types": set(),
+                "event": e
+            }
+
+        # 🔥 merge event types
+        merged[key]["event_types"].add(e["event_type"])
+
+    
+    #  BUILD FINAL TIMELINE
+   
     timeline = []
 
-    for event in events:
+    for (year, span), data in merged.items():
 
-        date = event["date"]
+        #  combine event types
+        event_types = "+".join(sorted(data["event_types"]))
 
-        if date is None:
-            continue
+        timeline.append((year, event_types, data["event"]))
 
-        # convert date to integer year
-        try:
-            year = int(date)
-        except:
-            continue
-
-        timeline.append((year, event["event_type"], event))
-
-    # sort by year
+    #  sort by year
     timeline.sort(key=lambda x: x[0])
 
     return timeline
-
-if __name__ == "__main__":
-
-    events = [
-        {'event_type': 'Birth', 'date': '1937'},
-        {'event_type': 'Marriage', 'date': '1960'},
-        {'event_type': 'Death', 'date': '2015'}
-    ]
-
-    timeline = build_timeline(events)
-
-    for year, event_type, event in timeline:
-        print(year, "→", event_type)

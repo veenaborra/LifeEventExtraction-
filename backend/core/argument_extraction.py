@@ -3,50 +3,78 @@ import spacy
 nlp = spacy.load("en_core_web_md")
 
 
-def extract_arguments(event_candidate):
+def extract_arguments(event, main_person):
 
-    span = event_candidate["span"]
+    sentence = event["sentence"]
+    doc = nlp(sentence)
 
-    doc = nlp(span)
+    
+    # PERSON (FINAL FIX)
+    
+    # Always use main person for biography timeline
+    person = [main_person]
 
-    date = None
-    location = None
-    organization = None
+   
+    # ORGANIZATION (FILTERED)
+    
+    organization = []
 
     for ent in doc.ents:
+        if ent.label_ == "ORG":
 
+           
+            if len(ent.text.split()) == 1:
+                continue
+
+            # remove if it's actually part of a PERSON name
+            if any(ent.text in p for p in person):
+                continue
+
+            organization.append(ent.text)
+
+    organization = list(set(organization))
+
+   
+    # DATE
+   
+    date = []
+
+    for ent in doc.ents:
         if ent.label_ == "DATE":
-            date = ent.text
+            date.append(ent.text)
 
-        elif ent.label_ == "GPE":
-            location = ent.text
+    date = list(set(date))
 
-        elif ent.label_ == "ORG":
-            organization = ent.text
+   
+    #  LOCATION
+    
+    location = []
 
-    return {
-        "event_type": event_candidate["event_type"],
-        "trigger": event_candidate["trigger"],
-        "span": span,
-        "date": date,
-        "location": location,
-        "organization": organization
+    for ent in doc.ents:
+        if ent.label_ in ("GPE", "LOC"):
+            location.append(ent.text)
+
+    location = list(set(location))
+
+   
+    #  FINAL STRUCTURE
+    
+    result = {
+        "event_type": event["event_type"],
+        "trigger": event["trigger"],
+        "span": event["span"],
+        "sentence": sentence,
+        "year": event.get("year"),
+        "person": person
     }
-if __name__ == "__main__":
 
-    events = [
-        {
-            "event_type": "Career",
-            "trigger": "joined",
-            "span": "He joined Tata Group in 1991"
-        },
-        {
-            "event_type": "Career",
-            "trigger": "became",
-            "span": "became chairman in 2012"
-        }
-    ]
+    if organization:
+        result["organization"] = organization
 
-    for event in events:
-        result = extract_arguments(event)
-        print(result)
+    if date:
+        result["date"] = date
+
+    if location:
+        result["location"] = location
+
+    return result
